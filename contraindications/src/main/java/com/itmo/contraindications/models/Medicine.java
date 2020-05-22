@@ -36,6 +36,7 @@ public class Medicine {
         return "Medicine{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", activeSubstances=" + activeSubstances +
                 '}';
     }
 }

@@ -1,5 +1,7 @@
 package com.itmo.contraindications.services.impl;
 
+import com.itmo.contraindications.dto.request.ContraindicationRequest;
+import jdk.jshell.spi.ExecutionControl;
 import org.springframework.stereotype.Service;
 import com.itmo.contraindications.dto.request.ContraindicationSearchRequest;
 import com.itmo.contraindications.models.ActiveSubstance;
@@ -12,11 +14,10 @@ import com.itmo.contraindications.repositories.DiseaseRepository;
 import com.itmo.contraindications.repositories.MedicineRepository;
 import com.itmo.contraindications.services.ContraindicationService;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.itmo.contraindications.models.Contraindication.ContraindicationType.*;
 
 @Service
 public class ContraindicationServiceImpl implements ContraindicationService
@@ -201,5 +202,181 @@ public class ContraindicationServiceImpl implements ContraindicationService
         }
 
         return Contraindication.ContraindicationSeverity.getFromNumber(max);
+    }
+
+    @Override
+    public void add(ContraindicationRequest request) {
+        if (request.getSourceId() == null) {
+            throw new RuntimeException("Source cannot be null");
+        }
+
+        Integer id = request.getSourceId();
+
+        String type = request.getType();
+
+        Contraindication contraindication = new Contraindication();
+
+        try {
+            Contraindication.ContraindicationType contraindicationType =
+                    Contraindication.ContraindicationType.valueOf(type);
+
+            contraindication.setType(contraindicationType);
+
+        } catch (IllegalArgumentException | NullPointerException ex) {
+            throw new RuntimeException("Contraindication type unrecognized");
+        }
+
+        contraindication.setDescription(request.getDescription());
+        contraindication.setFood(request.getFood());
+        contraindication.setInfoSource(request.getInfoSource());
+        contraindication.setMinAge(request.getMinAge());
+        contraindication.setMaxAge(request.getMaxAge());
+
+        try {
+            Contraindication.ContraindicationSeverity severity =
+                    Contraindication.ContraindicationSeverity.valueOf(request.getSeverity());
+
+            contraindication.setSeverity(severity);
+        } catch (IllegalArgumentException | NullPointerException ex) {
+            if (request.getSeverity() != null)
+                throw new RuntimeException("Severity unrecognized");
+        }
+
+        try {
+            Contraindication.ContraindicationFrequency frequency =
+                    Contraindication.ContraindicationFrequency.valueOf(request.getFrequency());
+
+            contraindication.setFrequency(frequency);
+        } catch (IllegalArgumentException | NullPointerException ex) {
+            if (request.getFrequency() != null)
+                throw new RuntimeException("Frequency unrecognized");
+        }
+
+        try {
+            Contraindication.ContraindicationSex sex =
+                    Contraindication.ContraindicationSex.valueOf(request.getSex());
+            contraindication.setSex(sex);
+        } catch (IllegalArgumentException | NullPointerException ex ) {
+            if (request.getSex() != null)
+                throw new RuntimeException("Sex unrecognized");
+        }
+
+        Medicine medicine;
+        Disease disease;
+        ActiveSubstance activeSubstance;
+
+        switch (contraindication.getType()) {
+            case MEDICINE_TO_DISEASE:
+                if (request.getTargetId() == null) {
+                    throw new RuntimeException("Target disease is required for this type");
+                }
+
+                medicine = this.medicineRepository.findById(request.getSourceId())
+                        .orElseThrow(() -> new RuntimeException("Medicine with given id is not found"));
+
+                disease = this.diseaseRepository.findById(request.getTargetId())
+                        .orElseThrow(() -> new RuntimeException("Disease with given id is not found"));
+
+                contraindication.setMedicineSource(medicine);
+                contraindication.setDiseaseTarget(disease);
+
+                break;
+            case ACTIVE_SUBSTANCE_TO_DISEASE:
+                if (request.getTargetId() == null) {
+                    throw new RuntimeException("Target disease is required for this type");
+                }
+
+                activeSubstance = this.activeSubstanceRepository.findById(request.getSourceId())
+                        .orElseThrow(() -> new RuntimeException("Active substance with given id is not found"));
+
+                disease = this.diseaseRepository.findById(request.getTargetId())
+                        .orElseThrow(() -> new RuntimeException("Disease with given id is not found"));
+
+                contraindication.setActiveSubstanceSource(activeSubstance);
+                contraindication.setDiseaseTarget(disease);
+
+                break;
+            case MEDICINE_TO_SEX:
+                if (contraindication.getSex() == null) {
+                    throw new RuntimeException("Sex is required for this type");
+                }
+
+                medicine = this.medicineRepository.findById(request.getSourceId())
+                        .orElseThrow(() -> new RuntimeException("Medicine with given id is not found"));
+
+                contraindication.setMedicineSource(medicine);
+                break;
+            case ACTIVE_SUBSTANCE_TO_SEX:
+                activeSubstance = this.activeSubstanceRepository.findById(request.getSourceId())
+                        .orElseThrow(() -> new RuntimeException("Active substance with given id is not found"));
+
+                if (request.getSex() == null) {
+                    throw new RuntimeException("Sex is required for this type");
+                }
+
+                contraindication.setActiveSubstanceSource(activeSubstance);
+
+                break;
+            case MEDICINE_TO_FOOD:
+                medicine = this.medicineRepository.findById(request.getSourceId())
+                        .orElseThrow(() -> new RuntimeException("Medicine with given id is not found"));
+
+                if (request.getFood() == null) {
+                    throw new RuntimeException("Food is required for this type");
+                }
+
+                contraindication.setMedicineSource(medicine);
+
+                break;
+            case ACTIVE_SUBSTANCE_TO_FOOD:
+                activeSubstance = this.activeSubstanceRepository.findById(request.getSourceId())
+                        .orElseThrow(() -> new RuntimeException("Active substance with given id is not found"));
+
+                if (request.getFood() == null) {
+                    throw new RuntimeException("Food is required for this type");
+                }
+
+                contraindication.setActiveSubstanceSource(activeSubstance);
+                break;
+            case MEDICINE_TO_AGE:
+                medicine = this.medicineRepository.findById(request.getSourceId())
+                        .orElseThrow(() -> new RuntimeException("Medicine with given id is not found"));
+
+                if (request.getMinAge() == null && request.getMaxAge() == null) {
+                    throw new RuntimeException("Age is required for this type");
+                }
+
+                contraindication.setMedicineSource(medicine);
+
+                break;
+            case ACTIVE_SUBSTANCE_TO_AGE:
+                activeSubstance = this.activeSubstanceRepository.findById(request.getSourceId())
+                        .orElseThrow(() -> new RuntimeException("Active substance with given id is not found"));
+
+                if (request.getMinAge() == null && request.getMaxAge() == null) {
+                    throw new RuntimeException("Age is required for this type");
+                }
+
+                contraindication.setActiveSubstanceSource(activeSubstance);
+
+                break;
+            case ACTIVE_SUBSTANCE_TO_ACTIVE_SUBSTANCE:
+                activeSubstance = this.activeSubstanceRepository.findById(request.getSourceId())
+                        .orElseThrow(() -> new RuntimeException("Active substance with given id is not found"));
+
+                if (request.getTargetId() == null) {
+                    throw new RuntimeException("Target active substance is required for this type");
+                }
+
+                ActiveSubstance targetActiveSubstance = this.activeSubstanceRepository.findById(request.getTargetId())
+                        .orElseThrow(() -> new RuntimeException("Active substance with given id is not found"));
+
+                contraindication.setActiveSubstanceSource(activeSubstance);
+                contraindication.setActiveSubstanceTarget(targetActiveSubstance);
+
+                break;
+        }
+
+        this.contraindicationRepository.save(contraindication);
     }
 }

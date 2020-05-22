@@ -1,6 +1,8 @@
 package com.itmo.contraindications.controllers;
 
+import com.itmo.contraindications.dto.request.ContraindicationRequest;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.itmo.contraindications.dto.mapper.ContraindicationMapper;
@@ -44,5 +46,10 @@ public class ContraindicationController {
         );
 
         return response;
+    }
+
+    @PostMapping("/contraindication")
+    public void add(@RequestBody ContraindicationRequest request) {
+        this.contraindicationService.add(request);
     }
 }

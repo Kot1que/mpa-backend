@@ -1,5 +1,6 @@
 package com.itmo.mpa.service
 
+import com.itmo.mpa.dto.request.MedicineRequest
 import com.itmo.mpa.dto.response.AppropriateMedicineResponse
 import com.itmo.mpa.service.exception.NoPendingDraftException
 import com.itmo.mpa.service.exception.PatientNotFoundException
@@ -18,4 +19,10 @@ interface MedicineService {
      *  @throws [NoPendingDraftException] if no draft is pending for a patient
      */
     fun getAppropriateMedicine(patientId: Long): List<AppropriateMedicineResponse>
+
+    /**
+     * Adds a medicine to database
+     * @param medicineRequest medicine dto
+     */
+    fun add(medicineRequest: MedicineRequest)
 }

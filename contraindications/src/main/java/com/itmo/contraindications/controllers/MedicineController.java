@@ -20,7 +20,7 @@ public class MedicineController {
     }
 
     @PostMapping
-    public MedicineDto add(MedicineDto medicineDto) {
+    public MedicineDto add(@RequestBody MedicineDto medicineDto) {
         Medicine medicine = this.medicineService.add(medicineDto);
 
         return this.medicineMapper.toDto(medicine);

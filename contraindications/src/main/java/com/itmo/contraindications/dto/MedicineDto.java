@@ -14,5 +14,14 @@ public class MedicineDto {
 
     private String name;
 
-    private Set<ContraindicationDto> contraindication;
+    private Set<ActiveSubstanceDto> activeSubstances;
+
+    @Override
+    public String toString() {
+        return "MedicineDto{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", activeSubstances=" + activeSubstances +
+                '}';
+    }
 }
