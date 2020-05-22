@@ -1,40 +1,60 @@
 version: '3'
 
 services:
-   db:
-     image: postgres:latest
-     restart: always
-     ports:
-       - 5432:5432
-     environment:
-       - POSTGRES_USER=postgres
-       - POSTGRES_PASSWORD=password
-       - POSTGRES_DB=mpa
-     volumes:
-       - /var/lib/postgresql/data
+  db:
+    image: postgres:latest
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=mpa
+    volumes:
+      - /var/lib/postgresql/data
 
-   cnn:
-     image: tensorflow/serving
-     volumes:
-       - './saved_model/cnnmodel/cnn_model:/models/cnn_model'
-     environment:
-       MODEL_NAME: 'cnn_model'
-     ports:
-       - "8501:8501"
+  cnn:
+    image: tensorflow/serving
+    volumes:
+      - './saved_model/cnnmodel/cnn_model:/models/cnn_model'
+    environment:
+      MODEL_NAME: 'cnn_model'
+    ports:
+      - "8501:8501"
 
-   server:
-     image: mpa-server
-     build:
-       .
-     depends_on:
-       - db
-       - cnn
-     links:
-       - db
-       - cnn
-     ports:
-       - 8080:8080
-     environment:
-       - DB_HOST=jdbc:postgresql://db:5432/mpa
-       - DB_USER=postgres
-       - DB_PASSWORD=password
+  server:
+    image: mpa-server
+    build:
+      .
+    depends_on:
+      - db
+      - cnn
+    links:
+      - db
+      - cnn
+    ports:
+      - 8080:8080
+    environment:
+      - DB_HOST=jdbc:postgresql://db:5432/mpa
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+
+  contraindications_db:
+    image: mysql:latest
+    volumes:
+      - /var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: contraindications
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+
+  contraindications:
+    image: contraindications
+    build:
+      ./contraindications/
+    depends_on:
+      - contraindications_db
+    ports:
+      - 8000:8080

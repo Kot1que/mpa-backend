@@ -4,7 +4,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.21'
     id 'org.jetbrains.kotlin.plugin.spring' version '1.3.21'
 
-    id 'io.gitlab.arturbosch.detekt' version '1.0.0-RC15'
+    //id 'io.gitlab.arturbosch.detekt' version '1.0.0-RC15'
 }
 
 apply plugin: 'io.spring.dependency-management'
@@ -32,6 +32,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.postgresql:postgresql:42.1.4'
     implementation 'io.arrow-kt:arrow-core-data:0.9.0'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'com.h2database:h2'
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
@@ -60,8 +61,8 @@ test {
     useJUnitPlatform()
 }
 
-detekt {
+/*detekt {
     toolVersion = "1.0.0-RC15"
     input = files("src/main/kotlin")
     config = files("docs/detekt.yml")
-}
+}*/
