@@ -9,7 +9,7 @@ import com.itmo.mpa.service.exception.NotFoundException
 import com.itmo.mpa.service.mapping.toResponse
 
 import org.springframework.stereotype.Service
-import java.util.function.Supplier
+import javax.annotation.PostConstruct
 
 @Service
 class TranslationServiceImpl(
